@@ -195,5 +195,5 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <button type="button" class="cancelbtn" onclick="window.location = 'register.php'">Register</button>
   </div>
 </form>
-<body>
+</body>
 </html>
