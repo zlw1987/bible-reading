@@ -48,6 +48,7 @@ mysqli_close($connection);
         <table class="w3-table w3-border w3-striped">
             <tr class = "w3-cell-row">
                 <th class = "w3-cell"><p><?echo $fname;?> 您好,</th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page_en.php">English Version</a></th>
+            </tr>
             <tr>
                 <th><p>您加入的读经计划</p></th>
             </tr>
@@ -98,7 +99,7 @@ mysqli_close($connection);
                 </td>
             </tr>
         </table>
-    <div>
+    </div>
     <br>
     <br>
 </body>

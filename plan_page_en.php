@@ -98,7 +98,7 @@ mysqli_close($connection);
                 </td>
             </tr>
         </table>
-    <div>
+    </div>
     <br>
     <br>
 </body>

@@ -18,6 +18,6 @@ $url = "home.php?page=".$page."&plan=".$plan;
 
 ?>
 <script type="text/javascript">
-var url=<?php echo json_encode($url); ?>;
-window.location= url;
+    var url=<?php echo json_encode($url); ?>;
+    window.location= url;
 </script>

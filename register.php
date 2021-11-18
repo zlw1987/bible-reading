@@ -181,5 +181,5 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <p>Already have an account? <a href="login.php">Sign in</a>.</p>
   </div>
 </form>
-<body>
+</body>
 </html>

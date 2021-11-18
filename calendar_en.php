@@ -218,6 +218,7 @@ mysqli_close($connection);
                     echo "</tr>";
                 ?>
             </tr>
+            <tr>
                 <th class = "w3-pale-red" colspan="7">
                     <span class="w3-tag w3-white">&nbsp;</span>&nbsp;Unread&nbsp;<span class="w3-tag w3-grey">&nbsp;</span>&nbsp;Read&nbsp;<span class="w3-tag w3-light-grey">&nbsp;</span>&nbsp;No Plan&nbsp;<span class="w3-tag w3-white w3-border w3-border-red">&nbsp;</span>&nbsp;Today&nbsp;
                             <br>Click dats to check

@@ -48,8 +48,8 @@ mysqli_close($connection);
 <body style = "background: #bf300d;">
     <br><br>
     <div class = "container">
-    <iframe id="preview-frame" src="<?php echo $book_url?>" name="preview-frame" frameborder="0" style="height:50%;width:100%;>
-    <!--<iframe src="<?php echo $book_url?>" frameborder="0" style="height:100%;width:100%">-->
+    <iframe id="preview-frame" src="<? echo $book_url?>" name="preview-frame" frameborder="0" style="height:50%;width:100%;">
+    <!--<iframe src="<? echo $book_url?>" frameborder="0" style="height:100%;width:100%">-->
     </iframe>
     </div>
     <br>

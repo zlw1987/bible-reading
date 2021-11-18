@@ -218,6 +218,7 @@ mysqli_close($connection);
                     echo "</tr>";
                 ?>
             </tr>
+            <tr>
                 <th class = "w3-pale-red" colspan="7">
                     <span class="w3-tag w3-white">&nbsp;</span>&nbsp;未读&nbsp;<span class="w3-tag w3-grey">&nbsp;</span>&nbsp;已读&nbsp;<span class="w3-tag w3-light-grey">&nbsp;</span>&nbsp;无计划&nbsp;<span class="w3-tag w3-white w3-border w3-border-red">&nbsp;</span>&nbsp;今日日期&nbsp;
                             <br>点击具体日期查询当日计划

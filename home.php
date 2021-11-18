@@ -218,7 +218,6 @@ mysqli_close($connection);
                             ?>      
                         </div>
                     </div>
-                    </div>
                 </td>
             </tr>
             <tr>
@@ -237,7 +236,6 @@ mysqli_close($connection);
                     ?>
                 </th>
             </tr>
-        </div>
         </table>
         <p class = "w3-left w3-button w3-black w3-round w3-circle""><a href = "home_en.php?plan=<? echo $ongoingplan_id; ?>">English</a></p>
         <div class = "w3-padding-16">
