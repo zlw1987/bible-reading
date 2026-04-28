@@ -1,40 +1,73 @@
-<?
+<?php
 require('judgelogin.php');
 require('connect.php');
-$userid = $_SESSION["userid"];
-$fname = $_SESSION["fname"];
 
-//get user signed up plans
-$sql = "SELECT op.id, plan.name, plan.description, op.startdate FROM ongoingplan_user AS ou, ongoingplan AS op, plan WHERE ou.user_id = $userid AND ou.ongoingplan_id = op.id AND op.plan_id = plan.id";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-$n_signup = mysqli_affected_rows($connection);
-$signedUp = array();
-$signedup_id = array();
-while ($r = mysqli_fetch_assoc($resultset)){
-    $signedUp[] = $r;
-    $signedup_id[] = $r[id];
-}    
+$userid = (int) $_SESSION['userid'];
+$fname = $_SESSION['fname'];
 
-
-//get other plans
-if ($n_signup > 0){
-    $signedup_plan = join(",", $signedup_id);
-    $other = array();
-    $sql = "SELECT op.id, plan.name, plan.description, op.startdate FROM ongoingplan AS op, plan WHERE op.plan_id = plan.id AND op.plan_id NOT IN ($signedup_plan)";
-    $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-    while ($r = mysqli_fetch_assoc($resultset)){
-        $other[] = $r;
-    }
-}else{
-    $other = array();
-    $sql = "SELECT op.id, plan.name, plan.description, op.startdate FROM ongoingplan AS op, plan WHERE op.plan_id = plan.id";
-    $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-    while ($r = mysqli_fetch_assoc($resultset)){
-        $other[] = $r;
-    }
+function e($value) {
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
+
+// Get user signed-up plans.
+$signedUp = array();
+$signedupPlanIds = array();
+
+$signedSql = "
+    SELECT op.id, plan.name, plan.description, op.startdate
+    FROM ongoingplan_user AS ou
+    INNER JOIN ongoingplan AS op ON ou.ongoingplan_id = op.id
+    INNER JOIN plan ON op.plan_id = plan.id
+    WHERE ou.user_id = ?
+";
+$signedStmt = mysqli_prepare($connection, $signedSql);
+mysqli_stmt_bind_param($signedStmt, "i", $userid);
+mysqli_stmt_execute($signedStmt);
+$signedResult = mysqli_stmt_get_result($signedStmt);
+while ($r = mysqli_fetch_assoc($signedResult)) {
+    $signedUp[] = $r;
+<<<<<<< ours
+    $signedup_id[] = $r['id'];
+}
+=======
+    $signedupPlanIds[] = (int) $r['id'];
+}
+mysqli_stmt_close($signedStmt);
+$n_signup = count($signedUp);
+>>>>>>> theirs
+
+// Get other plans.
+$other = array();
+if ($n_signup > 0) {
+    $placeholders = implode(',', array_fill(0, count($signedupPlanIds), '?'));
+    $otherSql = "
+        SELECT op.id, plan.name, plan.description, op.startdate
+        FROM ongoingplan AS op
+        INNER JOIN plan ON op.plan_id = plan.id
+        WHERE op.id NOT IN ($placeholders)
+    ";
+    $otherStmt = mysqli_prepare($connection, $otherSql);
+    $types = str_repeat('i', count($signedupPlanIds));
+    mysqli_stmt_bind_param($otherStmt, $types, ...$signedupPlanIds);
+    mysqli_stmt_execute($otherStmt);
+    $otherResult = mysqli_stmt_get_result($otherStmt);
+} else {
+    $otherSql = "
+        SELECT op.id, plan.name, plan.description, op.startdate
+        FROM ongoingplan AS op
+        INNER JOIN plan ON op.plan_id = plan.id
+    ";
+    $otherStmt = mysqli_prepare($connection, $otherSql);
+    mysqli_stmt_execute($otherStmt);
+    $otherResult = mysqli_stmt_get_result($otherStmt);
+}
+
+while ($r = mysqli_fetch_assoc($otherResult)) {
+    $other[] = $r;
+}
+mysqli_stmt_close($otherStmt);
 $n_other = count($other);
-// Close connection
+
 mysqli_close($connection);
 ?>
 <html>
@@ -47,27 +80,41 @@ mysqli_close($connection);
     <div class="w3-container">
         <table class="w3-table w3-border w3-striped">
             <tr class = "w3-cell-row">
-                <th class = "w3-cell"><p><?echo $fname;?> 您好,</th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page_en.php">English Version</a></th>
+<<<<<<< ours
+                <th class = "w3-cell"><p><?php echo $fname;?> 您好,</th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page_en.php">English Version</a></th>
+=======
+                <th class = "w3-cell"><p><?php echo e($fname); ?> 您好,</th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page_en.php">English Version</a></th>
+>>>>>>> theirs
             </tr>
             <tr>
                 <th><p>您加入的读经计划</p></th>
             </tr>
             <tr>
                 <td>
-                    <?
+                    <?php
                         $i = 1;
-                        if ($n_signup > 0){
+                        if ($n_signup > 0) {
                             echo '<ul class="w3-ul w3-card-4 w3-hoverable" style="width:100%" >';
+<<<<<<< ours
                             foreach ($signedUp as $sp){
-                                echo '<li>'.$i.'. '.'<a href = "home.php?plan='.$sp[id].'">'.$sp[name].'(点击进入)</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$sp[startdate].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "plan_detail.php?name='.$sp[name].'&plan='.$sp[description].'">计划简介</a></li>';
+                                echo '<li>'.$i.'. '.'<a href = "home.php?plan='.$sp['id'].'">'.$sp['name'].'(点击进入)</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$sp['startdate'].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "plan_detail.php?name='.$sp['name'].'&plan='.$sp['description'].'">计划简介</a></li>';
                                 $i = $i + 1;
+=======
+                            foreach ($signedUp as $sp) {
+                                $id = (int) $sp['id'];
+                                $name = e($sp['name']);
+                                $description = e($sp['description']);
+                                $startdate = e($sp['startdate']);
+                                echo '<li>'.$i.'. '.'<a href="home.php?plan='.$id.'">'.$name.'(点击进入)</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$startdate.' 开始<br>&nbsp;&nbsp;&nbsp;<a href="plan_detail.php?name='.urlencode($name).'&plan='.urlencode($description).'">计划简介</a></li>';
+                                $i++;
+>>>>>>> theirs
                             }
                             echo '</ul>';
-                        }else{
+                        } else {
                             echo "&nbsp;&nbsp;您暂时没有加入任何计划";
                         }
                     ?>
-                    
+
                 </td>
             </tr>
             <tr>
@@ -76,17 +123,30 @@ mysqli_close($connection);
             <tr>
                 <td>
                     <ul class="w3-ul w3-card-4 w3-hoverable" style="width:100%" >
-                    <?
+<<<<<<< ours
+                        <?php
                         $i = 1;
                         if ($n_other > 0){
                             foreach ($other as $o){
-                                echo '<li>'.$i.'. '.'<a href = "plan_detail.php?name='.$o[name].'&plan='.$o[description].'">'.$o[name].'</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$o[startdate].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "signup_plan.php?plan='.$o[id].'&user='.$userid.'">加入该计划</a></li>';
+                                echo '<li>'.$i.'. '.'<a href = "plan_detail.php?name='.$o['name'].'&plan='.$o['description'].'">'.$o['name'].'</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$o['startdate'].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "signup_plan.php?plan='.$o['id'].'&user='.$userid.'">加入该计划</a></li>';
                                 $i = $i + 1;
+=======
+                    <?php
+                        $i = 1;
+                        if ($n_other > 0) {
+                            foreach ($other as $o) {
+                                $id = (int) $o['id'];
+                                $name = e($o['name']);
+                                $description = e($o['description']);
+                                $startdate = e($o['startdate']);
+                                echo '<li>'.$i.'. '.'<a href="plan_detail.php?name='.urlencode($name).'&plan='.urlencode($description).'">'.$name.'</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$startdate.' 开始<br>&nbsp;&nbsp;&nbsp;<a href="signup_plan.php?plan='.$id.'">加入该计划</a></li>';
+                                $i++;
+>>>>>>> theirs
                             }
-                        }else{
+                        } else {
                             echo "&nbsp;&nbsp;暂时没有更多计划了";
                         }
-                    ?>
+                        ?>
                     </ul>
                 </td>
             </tr>

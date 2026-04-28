@@ -11,34 +11,35 @@ $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $smallgroup = array();
 while ($r = mysqli_fetch_assoc($resultset)){
     $smallgroup[] = $r;
+
 }
 
 // Define variables and initialize with empty values
 $username = $password = $confirm_password = "";
 $username_err = $password_err = $confirm_password_err = $email_err = "";
- 
+
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
- 
+
     // Validate username
     if(empty(trim($_POST["username"]))){
         $username_err = "Please enter a username.";
     } else{
         // Prepare a select statement
         $sql = "SELECT id FROM users WHERE username = ?";
-        
+
         if($stmt = mysqli_prepare($connection, $sql)){
             // Bind variables to the prepared statement as parameters
             mysqli_stmt_bind_param($stmt, "s", $param_username);
-            
+
             // Set parameters
             $param_username = trim($_POST["username"]);
-            
+
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
                 /* store result */
                 mysqli_stmt_store_result($stmt);
-                
+
                 if(mysqli_stmt_num_rows($stmt) == 1){
                     $username_err = "This username is already taken.";
                 } else{
@@ -52,31 +53,31 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             mysqli_stmt_close($stmt);
         }
     }
-    
+
     // Validate password
     if(empty(trim($_POST["password"]))){
-        $password_err = "Please enter a password.";     
+        $password_err = "Please enter a password.";
     } elseif(strlen(trim($_POST["password"])) < 6){
         $password_err = "Password must have atleast 6 characters.";
     } else{
         $password = trim($_POST["password"]);
     }
-    
+
     // Validate confirm password
     if(empty(trim($_POST["confirm_password"]))){
-        $confirm_password_err = "Please confirm password.";     
+        $confirm_password_err = "Please confirm password.";
     } else{
         $confirm_password = trim($_POST["confirm_password"]);
         if(empty($password_err) && ($password != $confirm_password)){
             $confirm_password_err = "Password did not match.";
         }
     }
-    
+
     //get fname and lname
     $fname = $_POST["fname"];
     $lname = $_POST["lname"];
     $s_group = $_POST["s_group"];
-    
+
     //validate email
     $email = $_POST["email"];
     if (!empty($email)) {
@@ -86,20 +87,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
     // Check input errors before inserting in database
     if(empty($username_err) && empty($password_err) && empty($confirm_password_err) && empty($email_err)){
-        
+
         // Prepare an insert statement
         $sql = "INSERT INTO `users` (`username`, `password`, `email`, `fname`, `lname`, `smallgroup`) VALUES (?, ?, ?, ?, ?, ?)";
-         
+
         if($stmt = mysqli_prepare($connection, $sql)){
             // Bind variables to the prepared statement as parameters
             mysqli_stmt_bind_param($stmt, "sssssi", $param_username, $param_password, $param_email, $fname, $lname, $s_group);
-            
+
             // Set parameters
             $param_username = $username;
             $param_email = $email;
             // Creates a password hash
-            $param_password = password_hash($password, PASSWORD_DEFAULT); 
-            
+            $param_password = password_hash($password, PASSWORD_DEFAULT);
+
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
                 // Redirect to login page
@@ -112,11 +113,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             mysqli_stmt_close($stmt);
         }
     }
-    
+
     // Close connection
     mysqli_close($connection);
+
 }
+echo password_hash('123456789', PASSWORD_DEFAULT);
 ?>
+
 
 <html>
 <head>
@@ -159,11 +163,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <div class="form-group">
         <label for="s_group"><b>*所在的小组(没有请选择其他)<br>Your small group(choose other if none):</b></label><br>
         <select name="s_group" id="s_group" required>
-            <?
+            <?php  
                 foreach($smallgroup as $group){
-                    echo '<option value='.$group[id].'>'.$group[name].'</option>';
+                    echo "<option value=".$group['id'].">".$group['name']."</option>";
                 }
-
             ?>
         </select>
     </div>

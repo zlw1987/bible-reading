@@ -3,7 +3,7 @@
 session_start();
 // Include database connection file
 require('connect.php');
-require_once 'vendor/autoload.php';
+//require_once 'vendor/autoload.php';
 
 //set timezone
 date_default_timezone_set("America/Los_Angeles");

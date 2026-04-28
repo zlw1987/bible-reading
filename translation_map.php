@@ -1,4 +1,4 @@
-<?
+<?php
 $audio_map = array("创世记"=>"Gen",
 "出埃及记"=>"Exod",
 "利未记"=>"Lev",

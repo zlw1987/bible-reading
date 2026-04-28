@@ -1,4 +1,4 @@
-<?
+<?php
 require('judgelogin.php');
 require('connect.php');
 $userid = $_SESSION["userid"];
@@ -12,8 +12,8 @@ $signedUp = array();
 $signedup_id = array();
 while ($r = mysqli_fetch_assoc($resultset)){
     $signedUp[] = $r;
-    $signedup_id[] = $r[id];
-}    
+    $signedup_id[] = $r['id'];
+}
 
 
 //get other plans
@@ -47,18 +47,18 @@ mysqli_close($connection);
     <div class="w3-container">
         <table class="w3-table w3-border w3-striped">
             <tr class = "w3-cell-row">
-                <th class = "w3-cell"><p>Hi <?echo $fname;?>,<br></th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page.php">中文版</a></th>
+                <th class = "w3-cell"><p>Hi <?php echo $fname;?>,<br></th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page.php">中文版</a></th>
             <tr>
                 <th><p>My plans</p></th>
             </tr>
             <tr>
                 <td>
-                    <?
+                    <?php
                         $i = 1;
                         if ($n_signup > 0){
                             echo '<ul class="w3-ul w3-card-4 w3-hoverable" style="width:100%" >';
                             foreach ($signedUp as $sp){
-                                echo '<li>'.$i.'. '.'<a href = "home_en.php?plan='.$sp[id].'">'.$sp[name].'(Click to Enther)</a><br>&nbsp;&nbsp;&nbsp;Started on&nbsp;'.$sp[startdate].' <br>&nbsp;&nbsp;&nbsp;<a href = "plan_detail.php?name='.$sp[name].'&plan='.$sp[description].'">Plan Description</a></li>';
+                                echo '<li>'.$i.'. '.'<a href = "home_en.php?plan='.$sp['id'].'">'.$sp['name'].'(Click to Enter)</a><br>&nbsp;&nbsp;&nbsp;Started on&nbsp;'.$sp['startdate'].' <br>&nbsp;&nbsp;&nbsp;<a href = "plan_detail.php?name='.$sp['name'].'&plan='.$sp['description'].'">Plan Description</a></li>';
                                 $i = $i + 1;
                             }
                             echo '</ul>';
@@ -66,7 +66,7 @@ mysqli_close($connection);
                             echo "&nbsp;&nbsp;Sign up for one!";
                         }
                     ?>
-                    
+
                 </td>
             </tr>
             <tr>
@@ -75,17 +75,17 @@ mysqli_close($connection);
             <tr>
                 <td>
                     <ul class="w3-ul w3-card-4 w3-hoverable" style="width:100%" >
-                    <?
+                        <?php
                         $i = 1;
                         if ($n_other > 0){
                             foreach ($other as $o){
-                                echo '<li>'.$i.'. '.'<a href = "plan_detail.php?name='.$o[name].'&plan='.$o[description].'">'.$o[name].'</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$o[startdate].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "signup_plan.php?plan='.$o[id].'&user='.$userid.'">Sign up</a></li>';
+                                echo '<li>'.$i.'. '.'<a href = "plan_detail.php?name='.$o['name'].'&plan='.$o['description'].'">'.$o['name'].'</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$o['startdate'].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "signup_plan.php?plan='.$o['id'].'&user='.$userid.'">Sign up</a></li>';
                                 $i = $i + 1;
                             }
                         }else{
                             echo "&nbsp;&nbsp;No more plans";
                         }
-                    ?>
+                        ?>
                     </ul>
                 </td>
             </tr>

@@ -1,4 +1,4 @@
-<?
+<?php
 require('judgelogin.php');
 require('connect.php');
 if ($_GET['plan']){
@@ -25,12 +25,12 @@ $today_year = date('Y');
 $today = getdate(date('U'));
 
 //get current showing month and year and its pre and next
-if ($_GET['year']){
+if (isset($_GET['year'])){
     $cur_year = $_GET['year'];
 }else{
     $cur_year = $today_year;
 }
-if ($_GET['month']){
+if (isset($_GET['month'])){
     $cur_month = $_GET['month'];
 }else{
     $cur_month = $today_month;
@@ -60,8 +60,8 @@ $prev_dom = date('t', mktime(0,0,0,$prev_month,01,$prev_year));
 $sql = "SELECT startdate FROM ongoingplan WHERE plan_id = $plan";
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 while ($r = mysqli_fetch_assoc($resultset)){
-    $startdate = $r[startdate];
-} 
+    $startdate = $r['startdate'];
+}
 
 //get user checkedin dates and make dictionary for hash
 $sql = "SELECT sp.day FROM s_checkins AS sc, s_plan AS sp WHERE sc.user_id = $userid AND sp.plan_id = $plan AND sc.s_plan_id = sp.id";
@@ -69,16 +69,16 @@ $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $n_days = mysqli_affected_rows($connection);
 $checked_dates = array();
 while ($r = mysqli_fetch_assoc($resultset)){
-    $checked_dates[$r[day]] = 1;
-}   
+    $checked_dates[$r['day']] = 1;
+}
 
 //get hasplan dates
 $sql = "SELECT day FROM s_plan WHERE plan_id = $plan";
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $has_plan = array();
 while ($r = mysqli_fetch_assoc($resultset)){
-    $has_plan[$r[day]] = 1;
-} 
+    $has_plan[$r['day']] = 1;
+}
 
 // Close connection
 mysqli_close($connection);
@@ -95,20 +95,20 @@ mysqli_close($connection);
         <table class = "w3-table w3-card-4 w3-border w3-bordered w3-centered">
             <tr>
                 <th class = "w3-pale-red" colspan="7">
-                    <p><?echo $fname;?> 您好,<br>
-                    <a href = "calendar.php?plan=<?echo $plan;?>">今天是 <?echo  $today[month]." ". $today[mday].", ". $today[year].", ". $today[weekday];?></a>
+                    <p><?php echo $fname;?> 您好,<br>
+                    <a href = "calendar.php?plan=<?php echo $plan;?>">今天是 <?php echo  $today['month']." ". $today['mday'].", ". $today['year'].", ". $today['weekday'];?></a>
                 </th>
             <tr>
                 <th  colspan="7" class = "w3-left-align">
                     <div class="w3-cell-row">
                         <div class = "w3-left-align w3-cell">
-                            <a href = "calendar.php?year=<?php echo $prev_year;?>&month=<?php echo $prev_month; ?>&plan=<?echo $plan;?>">&lt;&lt;prev</a>
+                            <a href = "calendar.php?year=<?php echo $prev_year; ?>&month=<?php echo $prev_month; ?>&plan=<?php echo $plan; ?>">&lt;&lt;prev</a>
                         </div>
                         <div class = "w3-cell w3-center">
-                            <?echo $months[$cur_month - 1]."&nbsp;".$cur_year?>
+                            <?php echo $months[$cur_month - 1]."&nbsp;".$cur_year?>
                         </div>
                         <div class = "w3-right-align w3-cell">
-                            <a href = "calendar.php?year=<?php echo $next_year;?>&month=<?php echo $next_month; ?>&plan=<?echo $plan;?>">next>></a>
+                            <a href = "calendar.php?year=<?php echo $next_year; ?>&month=<?php echo $next_month; ?>&plan=<?php echo $plan; ?>">next>></a>
                         </div>
                     </div>
                 </th>
@@ -137,7 +137,7 @@ mysqli_close($connection);
                 </th>
             </tr>
             <tr>
-                <? 
+                <?php
                     $n = 0;
                     for ($i = $prev_dom - $filled_days + 1; $i <= $prev_dom; $i++){
                         $show_date = strval($prev_year)."-".strval($prev_month)."-".strval($i);
@@ -199,7 +199,7 @@ mysqli_close($connection);
                             }else{
                                 $color = 'w3-white';
                             }
-                            $color = $color.$today_color;
+                            //$color = $color.$today_color;
                             $url = '<a href = "home.php?plan='.$plan.'&page='.-1*$page.'">';
                             if ($i == $today_date and $next_year == $today_year and $next_month == $today_month){
                                 echo '<td class = "w3-text-grey w3-border w3-border-red '.$color.'">'.$url,$i.'</a></td>';
@@ -228,7 +228,7 @@ mysqli_close($connection);
         <br>
         <div class="w3-cell-row">
             <div class = "w3-cell w3-center">
-                <a class="w3-btn w3-black w3-round" href = "home.php?plan=<? echo $plan;?>&page=<?echo $or_page;?>">返回读经计划</a>
+                <a class="w3-btn w3-black w3-round" href = "home.php?plan=<?php echo $plan; ?>&page=<?php echo $or_page; ?>">返回读经计划</a>
             </div>
         </div>
     </div>

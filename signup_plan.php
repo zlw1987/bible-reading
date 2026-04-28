@@ -1,15 +1,25 @@
-<?
+<?php
 require('judgelogin.php');
 require('connect.php');
-$plan = $_GET['plan'];
-$user = $_GET['user'];
+$plan = isset($_GET['plan']) ? (int) $_GET['plan'] : 0;
+$user = (int) $_SESSION['userid'];
 
-$sql = "SELECT * FROM ongoingplan_user AS ou WHERE ou.ongoingplan_id = $plan AND ou.user_id = $user";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-$n = mysqli_affected_rows($connection);
-if ($n == 0){
-   $sql = "INSERT INTO `ongoingplan_user`(`user_id`, `ongoingplan_id`) VALUES ($user,$plan)"; 
-   $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
+if ($plan > 0) {
+    $checkSql = "SELECT 1 FROM ongoingplan_user WHERE ongoingplan_id = ? AND user_id = ? LIMIT 1";
+    $checkStmt = mysqli_prepare($connection, $checkSql);
+    mysqli_stmt_bind_param($checkStmt, "ii", $plan, $user);
+    mysqli_stmt_execute($checkStmt);
+    mysqli_stmt_store_result($checkStmt);
+
+    if (mysqli_stmt_num_rows($checkStmt) === 0) {
+        $insertSql = "INSERT INTO ongoingplan_user (user_id, ongoingplan_id) VALUES (?, ?)";
+        $insertStmt = mysqli_prepare($connection, $insertSql);
+        mysqli_stmt_bind_param($insertStmt, "ii", $user, $plan);
+        mysqli_stmt_execute($insertStmt);
+        mysqli_stmt_close($insertStmt);
+    }
+
+    mysqli_stmt_close($checkStmt);
 }
 // Close connection
 mysqli_close($connection);
