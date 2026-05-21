@@ -1,19 +1,11 @@
-<?
+<?php
 require('connect.php');
-$mydate=getdate(date("U"));
-$today = date_create(date("Y-m-j"));
+require_once 'security.php';
 
-$sql = "SELECT `startdate` FROM `s_plan` WHERE `id` = 1";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-$results = array();
-while ($r = mysqli_fetch_assoc($resultset)){
-    $results[] = $r;
-}
-foreach ($results as $o){
-    $day = $o[startdate];
-}
-echo $day;
+$id = 1;
+$row = db_one($connection, "SELECT startdate FROM s_plan WHERE id = ? LIMIT 1", "i", $id);
+$day = $row ? $row['startdate'] : '';
+echo h($day);
 
-echo((strtotime(date("j F Y")) - strtotime("24 December 2020"))/ (60*60*24) ."<br>");
+echo h((string) ((strtotime(date("j F Y")) - strtotime("24 December 2020")) / (60*60*24))) . "<br>";
 mysqli_close($connection);
-?>

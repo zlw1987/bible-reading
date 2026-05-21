@@ -1,18 +1,18 @@
 <?php
 require('judgelogin.php');
 require('connect.php');
-if ($_GET['plan']){
-    $plan = $_GET['plan'];
-    $_SESSION['plan'] = $_GET['plan'];
-}elseif ($_SESSION['plan']){
-    $plan = $_SESSION['plan'];
+if (input_int($_GET, 'plan', 0) > 0){
+    $plan = input_int($_GET, 'plan', 0);
+    $_SESSION['plan'] = $plan;
+}elseif (!empty($_SESSION['plan'])){
+    $plan = (int) $_SESSION['plan'];
 }else{
     header('Location: plan_page_en.php');
     exit;
 }
-$or_page = $_SESSION["page"];
-$plan = $_SESSION['plan'];
-$userid = $_SESSION["userid"];
+$or_page = (int) ($_SESSION["page"] ?? 0);
+$plan = (int) $_SESSION['plan'];
+$userid = (int) $_SESSION["userid"];
 $fname = $_SESSION["fname"];
 $months = array("Januray","February","March","April","May","June","July","August","September","October","November","December");
 
@@ -26,12 +26,20 @@ $today = getdate(date('U'));
 
 //get current showing month and year and its pre and next
 if (isset($_GET['year'])){
+<<<<<<< ours
     $cur_year = $_GET['year'];
+=======
+    $cur_year = input_int($_GET, 'year', $today_year);
+>>>>>>> theirs
 }else{
     $cur_year = $today_year;
 }
 if (isset($_GET['month'])){
+<<<<<<< ours
     $cur_month = $_GET['month'];
+=======
+    $cur_month = max(1, min(12, input_int($_GET, 'month', $today_month)));
+>>>>>>> theirs
 }else{
     $cur_month = $today_month;
 }
@@ -57,27 +65,43 @@ $filled_days = date('w', mktime(0,0,0,$cur_month,01,$cur_year));
 $prev_dom = date('t', mktime(0,0,0,$prev_month,01,$prev_year));
 
 //get the startdate
+<<<<<<< ours
 $sql = "SELECT startdate FROM ongoingplan WHERE plan_id = $plan";
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 while ($r = mysqli_fetch_assoc($resultset)){
     $startdate = $r['startdate'];
 }
+=======
+$planRow = db_one($connection, "SELECT startdate, plan_id FROM ongoingplan WHERE id = ? LIMIT 1", "i", $plan);
+if (!$planRow) {
+    redirect_to('plan_page.php');
+}
+$startdate = $planRow['startdate'];
+$base_plan_id = (int) $planRow['plan_id'];
+>>>>>>> theirs
 
 //get user checkedin dates and make dictionary for hash
-$sql = "SELECT sp.day FROM s_checkins AS sc, s_plan AS sp WHERE sc.user_id = $userid AND sp.plan_id = $plan AND sc.s_plan_id = sp.id";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-$n_days = mysqli_affected_rows($connection);
 $checked_dates = array();
+<<<<<<< ours
 while ($r = mysqli_fetch_assoc($resultset)){
     $checked_dates[$r['day']] = 1;
+=======
+$checkedRows = db_all($connection, "SELECT sp.day FROM s_checkins AS sc INNER JOIN s_plan AS sp ON sc.s_plan_id = sp.id WHERE sc.user_id = ? AND sp.plan_id = ?", "ii", $userid, $base_plan_id);
+foreach ($checkedRows as $r) {
+    $checked_dates[(int) $r['day']] = 1;
+>>>>>>> theirs
 }
 
 //get hasplan dates
-$sql = "SELECT day FROM s_plan WHERE plan_id = $plan";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $has_plan = array();
+<<<<<<< ours
 while ($r = mysqli_fetch_assoc($resultset)){
     $has_plan[$r['day']] = 1;
+=======
+$planRows = db_all($connection, "SELECT day FROM s_plan WHERE plan_id = ?", "i", $base_plan_id);
+foreach ($planRows as $r) {
+    $has_plan[(int) $r['day']] = 1;
+>>>>>>> theirs
 }
 
 // Close connection
@@ -95,8 +119,13 @@ mysqli_close($connection);
         <table class = "w3-table w3-card-4 w3-border w3-bordered w3-centered">
             <tr>
                 <th class = "w3-pale-red" colspan="7">
+<<<<<<< ours
                     <p>Hi <?php echo $fname;?>,<br>
                     <a href = "calendar_en.php?plan=<?php echo $plan;?>">Today is <?php echo  $today['month']." ". $today['mday'].", ". $today['year'].", ". $today['weekday'];?></a>
+=======
+                    <p>Hi <?php echo h($fname);?>,<br>
+                    <a href = "calendar_en.php?plan=<?php echo $plan;?>">Today is <?php echo h($today['month']." ". $today['mday'].", ". $today['year'].", ". $today['weekday']);?></a>
+>>>>>>> theirs
                 </th>
             <tr>
                 <th  colspan="7" class = "w3-left-align">
@@ -137,7 +166,11 @@ mysqli_close($connection);
                 </th>
             </tr>
             <tr>
+<<<<<<< ours
                 <?php
+=======
+                <?php 
+>>>>>>> theirs
                     $n = 0;
                     for ($i = $prev_dom - $filled_days + 1; $i <= $prev_dom; $i++){
                         $show_date = strval($prev_year)."-".strval($prev_month)."-".strval($i);

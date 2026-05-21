@@ -1,35 +1,20 @@
-<?
+<?php
 include "judgelogin.php";
-$userid = $_SESSION["userid"];
 
-if ($_GET['plan']){
-    $s_plan_id = $_GET['plan'];
-}else{
-    header("Location: plan_page_en.php"); 
-    exit;
+verify_csrf();
+
+$userid = (int) $_SESSION["userid"];
+$s_plan_id = input_int($_POST, 'plan', 0);
+$id = input_int($_POST, 'id', 0);
+
+if ($s_plan_id <= 0 || $id <= 0) {
+    redirect_to('plan_page_en.php');
 }
 
-if ($_GET['id']){
-    $id = $_GET['id'];
-
-    //check if the comment belongs to the user
-    $sql = "SELECT user_id FROM comments WHERE id = $id";
-    $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-    while ($r = mysqli_fetch_assoc($resultset)){
-        $u_id = $r[user_id];
-    } 
-    
-    //delete the comments and all its replies
-    if ($u_id == $userid){
-        $sql = "DELETE FROM comments WHERE id = $id";
-        mysqli_query($connection, $sql) or die(mysqli_error());
-        $sql = "DELETE FROM comments WHERE p_id = $id";
-        mysqli_query($connection, $sql) or die(mysqli_error());
-    }
+$row = db_one($connection, "SELECT user_id FROM comments WHERE id = ? LIMIT 1", "i", $id);
+if ($row && (int) $row['user_id'] === $userid) {
+    db_execute($connection, "DELETE FROM comments WHERE id = ? OR p_id = ?", "ii", $id, $id);
 }
-// Close connection
+
 mysqli_close($connection);
-
-header("Location: comment_en.php?splanid=$s_plan_id"); 
-exit;
-?>
+redirect_to("comment_en.php?splanid=" . $s_plan_id);

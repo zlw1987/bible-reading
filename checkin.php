@@ -1,23 +1,21 @@
-<?
+<?php
 require('judgelogin.php');
-$userid = $_SESSION["userid"];
-$planid = $_GET['planid'];
-$page = $_GET['page'];
-$plan = $_GET['plan'];
-echo $plan;
-$sql = "SELECT * FROM `s_checkins` WHERE user_id = $userid and s_plan_id = $planid;";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-$n = mysqli_affected_rows($connection);
-if ($n == 0){
-    $sql = "INSERT INTO `s_checkins` (`id`, `user_id`, `s_plan_id`) VALUES (NULL, $userid, $planid);";
-    mysqli_query($connection, $sql) or die(mysqli_error());
-}
-// Close connection
-mysqli_close($connection);
-$url = "home.php?page=".$page."&plan=".$plan;
 
-?>
-<script type="text/javascript">
-    var url=<?php echo json_encode($url); ?>;
-    window.location= url;
-</script>
+verify_csrf();
+
+$userid = (int) $_SESSION["userid"];
+$planid = input_int($_POST, 'planid', 0);
+$page = input_int($_POST, 'page', 0);
+$plan = input_int($_POST, 'plan', 0);
+
+if ($planid <= 0 || $plan <= 0) {
+    redirect_to('plan_page.php');
+}
+
+$row = db_one($connection, "SELECT id FROM s_checkins WHERE user_id = ? AND s_plan_id = ? LIMIT 1", "ii", $userid, $planid);
+if (!$row) {
+    db_execute($connection, "INSERT INTO s_checkins (user_id, s_plan_id) VALUES (?, ?)", "ii", $userid, $planid);
+}
+
+mysqli_close($connection);
+redirect_to("home.php?page=" . $page . "&plan=" . $plan);

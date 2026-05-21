@@ -1,9 +1,8 @@
-<?
-  $detail = $_GET['plan'];
-  $name = $_GET['name'];
+<?php
+require_once 'security.php';
 
-  
-
+$detail = $_GET['plan'] ?? '';
+$name = $_GET['name'] ?? '';
 ?>
 <html>
     <head>
@@ -13,11 +12,10 @@
 <body>
     <br>
     <div class="w3-container">
-        <h2 w3-center><?echo $name;?></h2>
-        <?echo $detail;?>
+        <h2 w3-center><?php echo h($name); ?></h2>
+        <?php echo nl2br(h($detail)); ?>
         <br>
-        <button class="w3-button w3-round w3-large w3-black" style="margin: 12px 0px 12px 0px" onclick="javascript:history.back(1)" />返回</button>
-        
+        <button class="w3-button w3-round w3-large w3-black" style="margin: 12px 0px 12px 0px" onclick="javascript:history.back(1)">返回</button>
     </div>
 <br>
 <br>

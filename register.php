@@ -1,11 +1,13 @@
 <?php
 // Include database connection file
 require('connect.php');
+require_once 'security.php';
 
 //set timezone
 date_default_timezone_set("America/Los_Angeles");
 
 //get small group name
+<<<<<<< ours
 $sql = "SELECT * FROM `smallgroup`";
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $smallgroup = array();
@@ -13,6 +15,9 @@ while ($r = mysqli_fetch_assoc($resultset)){
     $smallgroup[] = $r;
 
 }
+=======
+$smallgroup = db_all($connection, "SELECT id, name FROM smallgroup ORDER BY name");
+>>>>>>> theirs
 
 // Define variables and initialize with empty values
 $username = $password = $confirm_password = "";
@@ -20,7 +25,12 @@ $username_err = $password_err = $confirm_password_err = $email_err = "";
 
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
+<<<<<<< ours
 
+=======
+    verify_csrf();
+ 
+>>>>>>> theirs
     // Validate username
     if(empty(trim($_POST["username"]))){
         $username_err = "Please enter a username.";
@@ -74,12 +84,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 
     //get fname and lname
+<<<<<<< ours
     $fname = $_POST["fname"];
     $lname = $_POST["lname"];
     $s_group = $_POST["s_group"];
 
+=======
+    $fname = trim($_POST["fname"] ?? "");
+    $lname = trim($_POST["lname"] ?? "");
+    $s_group = input_int($_POST, "s_group", 0);
+    
+>>>>>>> theirs
     //validate email
-    $email = $_POST["email"];
+    $email = trim($_POST["email"] ?? "");
     if (!empty($email)) {
         if ((!filter_var($email, FILTER_VALIDATE_EMAIL)) && (!empty($email))) {
         $email_err = "Invalid email format";
@@ -128,27 +145,28 @@ echo password_hash('123456789', PASSWORD_DEFAULT);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+<form action="<?php echo h($_SERVER["PHP_SELF"]); ?>" method="post">
+  <?php echo csrf_field(); ?>
   <div class="container">
     <h1>Register</h1>
     <hr>
     
     <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
       <label for="username"><b>*User Name</b></label>
-      <input type="text" placeholder="Enter User Name" name="username" id="username" value="<?php echo $username; ?>" required>
-      <span class="help-block"><?php echo $username_err; ?></span>
+      <input type="text" placeholder="Enter User Name" name="username" id="username" value="<?php echo h($username); ?>" required>
+      <span class="help-block"><?php echo h($username_err); ?></span>
     </div>
 
     <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
       <label for="password"><b>*Password</b></label>
-      <input type="password" placeholder="Enter Password" name="password" id="password" value="<?php echo $password; ?>" required>
-      <span class="help-block"><?php echo $password_err; ?></span>
+      <input type="password" placeholder="Enter Password" name="password" id="password" value="<?php echo h($password); ?>" required>
+      <span class="help-block"><?php echo h($password_err); ?></span>
     </div>
 
     <div class="form-group <?php echo (!empty($confirm_password_err)) ? 'has-error' : ''; ?>">
       <label for="confirm_password"><b>*Confirm Password</b></label>
-      <input type="password" placeholder="Confirm Your Password" name="confirm_password" id="confirm_password" value="<?php echo $confirm_password; ?>" required>
-      <span class="help-block"><?php echo $confirm_password_err; ?></span>
+      <input type="password" placeholder="Confirm Your Password" name="confirm_password" id="confirm_password" value="<?php echo h($confirm_password); ?>" required>
+      <span class="help-block"><?php echo h($confirm_password_err); ?></span>
     </div>
     
     <div class="form-group">
@@ -163,9 +181,15 @@ echo password_hash('123456789', PASSWORD_DEFAULT);
     <div class="form-group">
         <label for="s_group"><b>*所在的小组(没有请选择其他)<br>Your small group(choose other if none):</b></label><br>
         <select name="s_group" id="s_group" required>
+<<<<<<< ours
             <?php  
                 foreach($smallgroup as $group){
                     echo "<option value=".$group['id'].">".$group['name']."</option>";
+=======
+            <?php
+                foreach($smallgroup as $group){
+                    echo '<option value="'.(int) $group['id'].'">'.h($group['name']).'</option>';
+>>>>>>> theirs
                 }
             ?>
         </select>
@@ -174,7 +198,7 @@ echo password_hash('123456789', PASSWORD_DEFAULT);
     <div class="form-group <?php echo (!empty($email_err)) ? 'has-error' : ''; ?>">
       <label for="email"><b>Email</b></label>
       <input type="text" placeholder="Leave Blank if You Don't Have One!" name="email" id="email">
-      <span class="help-block"><?php echo $email_err; ?></span>
+      <span class="help-block"><?php echo h($email_err); ?></span>
     </div>
     
     <hr>

@@ -3,7 +3,12 @@
 session_start();
 // Include database connection file
 require('connect.php');
+<<<<<<< ours
 //require_once 'vendor/autoload.php';
+=======
+require_once 'security.php';
+require_once 'vendor/autoload.php';
+>>>>>>> theirs
 
 //set timezone
 date_default_timezone_set("America/Los_Angeles");
@@ -12,33 +17,28 @@ date_default_timezone_set("America/Los_Angeles");
 if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
     header("location: plan_page.php");
     exit;
-}else if(isset($_COOKIE['rememberme'])){
- 
-  // Decrypt cookie variable value
-  $userid = decryptCookie($_COOKIE['rememberme']);
- 
-  $sql_query = "select count(*) as cntUser,id, username, password from users where id='".$userid."'";
-  $result = mysqli_query($connection,$sql_query);
-  $row = mysqli_fetch_array($result);
+} else if (isset($_COOKIE['rememberme'])) {
+    $userid = decryptCookie($_COOKIE['rememberme']);
+    if (ctype_digit((string) $userid)) {
+        $userid = (int) $userid;
+        $row = db_one($connection, "SELECT id, username, fname FROM users WHERE id = ? LIMIT 1", "i", $userid);
 
-  $count = $row['cntUser'];
-  $username = $row['username'];
-  
-
-  if( $count > 0 ){
-    $_SESSION['userid'] = $userid; 
-    $_SESSION["loggedin"] = true;
-    $_SESSION["username"] = $username; 
-    $_SESSION["fname"] = $fname;
-    header('Location: plan_page.php');
-    exit;
-  }
+        if ($row) {
+            session_regenerate_id(true);
+            $_SESSION['userid'] = $userid;
+            $_SESSION["loggedin"] = true;
+            $_SESSION["username"] = $row['username'];
+            $_SESSION["fname"] = $row['fname'];
+            header('Location: plan_page.php');
+            exit;
+        }
+    }
 }
 
 // Encrypt cookie
 function encryptCookie( $value ) {
 
-   $key = hex2bin(openssl_random_pseudo_bytes(4));
+   $key = random_bytes(32);
 
    $cipher = "aes-256-cbc";
    $ivlen = openssl_cipher_iv_length($cipher);
@@ -50,13 +50,19 @@ function encryptCookie( $value ) {
 }
 
 // Decrypt cookie
-function decryptCookie( $ciphertext ) {
+function decryptCookie($ciphertext) {
+    $decoded = base64_decode((string) $ciphertext, true);
+    if ($decoded === false) {
+        return false;
+    }
 
-   $cipher = "aes-256-cbc";
+    $parts = explode('::', $decoded);
+    if (count($parts) !== 3) {
+        return false;
+    }
 
-   list($encrypted_data, $iv,$key) = explode('::', base64_decode($ciphertext));
-   return openssl_decrypt($encrypted_data, $cipher, $key, 0, $iv);
-
+    list($encrypted_data, $iv, $key) = $parts;
+    return openssl_decrypt($encrypted_data, "aes-256-cbc", $key, 0, $iv);
 }
 
 // Define variables and initialize with empty values
@@ -65,6 +71,7 @@ $username_err = $password_err = "";
  
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
+    verify_csrf();
     
     // Check if username is empty
     if(empty(trim($_POST["username"]))){
@@ -103,9 +110,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     mysqli_stmt_bind_result($stmt, $userid, $username, $hashed_password, $fname);
                     if(mysqli_stmt_fetch($stmt)){
                         if(password_verify($password, $hashed_password)){
-                            // Password is correct, so start a new session
-                            session_start();
-                            
+                            // Password is correct, so renew the session identifier.
+                            session_regenerate_id(true);
+
                             // Store data in session variables
                             $_SESSION["loggedin"] = true;
                             $_SESSION["userid"] = $userid;
@@ -116,7 +123,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 // Set cookie variables
                                 $days = 365;
                                 $value = encryptCookie($userid);
-                                setcookie ("rememberme",$value,time()+ ($days * 24 * 60 * 60 * 1000));
+                                setcookie("rememberme", $value, array(
+                                    'expires' => time() + ($days * 24 * 60 * 60),
+                                    'path' => '/',
+                                    'httponly' => true,
+                                    'samesite' => 'Lax',
+                                    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+                                ));
                             }
                             
                             // Redirect user to plan_page page
@@ -150,7 +163,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+<form action="<?php echo h($_SERVER["PHP_SELF"]); ?>" method="post">
+  <?php echo csrf_field(); ?>
   <div class="imgcontainer">
     <img src="bible.jfif" alt="Bible" class="banner">
     <h2>Let's read bible together!</h2>
@@ -163,8 +177,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
           <label for="username"><b>Username</b></label>
         </div>
         <div class="col-75">
-          <input type="text" placeholder="Enter Username" name="username" value="<?php echo $username; ?>" required>
-          <span class="help-block"><?php echo $username_err; ?></span>
+          <input type="text" placeholder="Enter Username" name="username" value="<?php echo h($username); ?>" required>
+          <span class="help-block"><?php echo h($username_err); ?></span>
         </div>
       </div>
     </div>
@@ -177,7 +191,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         </div>
         <div class="col-75">
           <input type="password" placeholder="Enter Password" name="password" required>
-          <span class="help-block"><?php echo $password_err; ?></span>
+          <span class="help-block"><?php echo h($password_err); ?></span>
         </div>
       </div>
     </div>

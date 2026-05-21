@@ -1,13 +1,13 @@
 <?php
 require('judgelogin.php');
 $username = $_SESSION["username"];
-$userid = $_SESSION["userid"];
+$userid = (int) $_SESSION["userid"];
 $fname = $_SESSION["fname"];
-if ($_GET['plan']){
-    $ongoingplan_id = $_GET['plan'];
-    $_SESSION['plan'] =  $_GET['plan'];
-}elseif ($_SESSION['plan']){
-    $ongoingplan_id = $_SESSION['plan'];
+if (input_int($_GET, 'plan', 0) > 0){
+    $ongoingplan_id = input_int($_GET, 'plan', 0);
+    $_SESSION['plan'] =  $ongoingplan_id;
+}elseif (!empty($_SESSION['plan'])){
+    $ongoingplan_id = (int) $_SESSION['plan'];
 }else{
     header('Location: plan_page.php');
     exit;
@@ -17,14 +17,20 @@ if ($_GET['plan']){
 //set time
 date_default_timezone_set("America/Los_Angeles");
 $mydate=getdate(date("U"));
+<<<<<<< ours
 $month = date('m');
 
 //$ongoingplan_id = $_GET['plan'];
+=======
+$month = date("m");
+
+>>>>>>> theirs
 
 //set dictionary for bible url
 require('translation_map.php');
 
 //get user small group
+<<<<<<< ours
 $sql = "SELECT smallgroup FROM users WHERE id = " . $userid;
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 while ($r = mysqli_fetch_assoc($resultset)){
@@ -35,6 +41,14 @@ while ($r = mysqli_fetch_assoc($resultset)){
 //check which day should be showing
 if (isset($_GET['page'])){
     $dif_date = $_GET['page'];
+=======
+$userRow = db_one($connection, "SELECT smallgroup FROM users WHERE id = ? LIMIT 1", "i", $userid);
+$smallgroup = $userRow ? (int) $userRow['smallgroup'] : 0;
+
+//check which day should be showing
+if (isset($_GET['page'])){
+    $dif_date = input_int($_GET, 'page', 0);
+>>>>>>> theirs
 }else{
     $dif_date = 0;
 }
@@ -52,6 +66,7 @@ if ($dif_date == 0){
 }
 
 //get the day of the plan
+<<<<<<< ours
 $sql = "SELECT startdate,plan_id FROM ongoingplan WHERE id = " . $ongoingplan_id;
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $results = array();
@@ -60,16 +75,28 @@ while ($r = mysqli_fetch_assoc($resultset)){
 }
 $startdate = $results[0]['startdate'];
 $plan_id = $results[0]['plan_id'];
+=======
+$planRow = db_one($connection, "SELECT startdate, plan_id FROM ongoingplan WHERE id = ? LIMIT 1", "i", $ongoingplan_id);
+if (!$planRow) {
+    redirect_to('plan_page.php');
+}
+$startdate = $planRow['startdate'];
+$plan_id = (int) $planRow['plan_id'];
+>>>>>>> theirs
 $today = date("Y-m-j",strtotime("-$dif_date day"));
 $day = ceil((strtotime($today) - strtotime($startdate)) / (60*60*24)) + 1;
 
 //get the daily plan detail
+<<<<<<< ours
 $sql = "SELECT * FROM `s_plan` WHERE day = $day AND plan_id = " . $plan_id;
 $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
 $result = array();
 while ($r = mysqli_fetch_assoc($resultset)){
     $result[] = $r;
 }
+=======
+$result = db_all($connection, "SELECT * FROM s_plan WHERE day = ? AND plan_id = ?", "ii", $day, $plan_id);
+>>>>>>> theirs
 $n = count($result);
 if ($n > 0){
     $detail = $result[0]['detail'];
@@ -85,6 +112,7 @@ $_SESSION['plandetail'] = $plandetail;
 
 //get all checked in users
 if ($result){
+<<<<<<< ours
 
     $s_plan_id = $result[0]['id'];
     $sql = "SELECT z.fname, z.lname, z.avatar, z.id FROM s_checkins AS r, users AS z WHERE r.s_plan_id = " . $s_plan_id . " AND r.user_id = z.id";
@@ -95,6 +123,15 @@ if ($result){
     while ($r = mysqli_fetch_assoc($resultset)){
         $checked[] = $r;
         if ($r['id'] == $userid){
+=======
+    
+    $s_plan_id = (int) $result[0]['id'];
+    $checked = db_all($connection, "SELECT z.fname, z.lname, z.avatar, z.id FROM s_checkins AS r INNER JOIN users AS z ON r.user_id = z.id WHERE r.s_plan_id = ?", "i", $s_plan_id);
+    //check if user has checked in
+    $bl = 0;
+    foreach ($checked as $r) {
+        if ((int) $r['id'] === $userid) {
+>>>>>>> theirs
             $bl = 1;
         }
     }
@@ -105,6 +142,7 @@ if ($result){
 $checked_group = array();
 $a_group = 0;
 if ($result){
+<<<<<<< ours
     $s_plan_id = $result[0]['id'];
     $sql = "SELECT z.fname, z.lname, z.avatar, z.id FROM s_checkins AS r, users AS z WHERE r.s_plan_id = " . $s_plan_id . " AND r.user_id = z.id AND z.smallgroup = " . $smallgroup;
     $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
@@ -113,6 +151,10 @@ if ($result){
     while ($r = mysqli_fetch_assoc($resultset)){
         $checked_group[] = $r;
     }
+=======
+    $s_plan_id = (int) $result[0]['id'];
+    $checked_group = db_all($connection, "SELECT z.fname, z.lname, z.avatar, z.id FROM s_checkins AS r INNER JOIN users AS z ON r.user_id = z.id WHERE r.s_plan_id = ? AND z.smallgroup = ?", "ii", $s_plan_id, $smallgroup);
+>>>>>>> theirs
     $a_group = count($checked_group);
 }
 
@@ -133,8 +175,13 @@ mysqli_close($connection);
     <div class="w3-container">
         <table class="w3-table w3-border w3-striped">
             <tr>
+<<<<<<< ours
                 <th><p>Welcome <?php echo $fname;?>,<br>
                     Today is <?php echo  $mydate['month']." ". $mydate['mday'].", ". $mydate['year'].", ". $mydate['weekday'];?></p>
+=======
+                <th><p>Welcome <?php echo h($fname);?>,<br>
+                    Today is <?php echo h($mydate['month']." ". $mydate['mday'].", ". $mydate['year'].", ". $mydate['weekday']);?></p>
+>>>>>>> theirs
                     <div class="w3-cell-row">
                         <div class = "w3-left-align w3-cell">
                             <a href="<?php echo "home_en.php?page=".$pre."&plan=".$ongoingplan_id ?>">Prev</a>&nbsp;
@@ -148,7 +195,11 @@ mysqli_close($connection);
                 </th>
             </tr>
             <tr>
+<<<<<<< ours
                 <th><p><?php echo $planday?></p></th>
+=======
+                <th><p><?php echo h($planday)?></p></th>
+>>>>>>> theirs
             </tr>
             <tr>
                 <th>
@@ -202,8 +253,13 @@ mysqli_close($connection);
                         <div id="smallgroup" class="w3-container checked" style="display:block">
                             <?php
                                 foreach($checked_group as $b_group){
+<<<<<<< ours
                                     $printname_group = $b_group['fname']." ". $b_group['lname']."; ";
                                         echo $printname_group;
+=======
+                                        $printname_group = $b_group['fname']." ". $b_group['lname']."; ";
+                                        echo h($printname_group);
+>>>>>>> theirs
                                         }
                                 if ($a_group == 0 && $n > 0){
                                     echo "Open your bible and become the first!";
@@ -215,8 +271,8 @@ mysqli_close($connection);
                         <div id="all" class="w3-container checked" style="display:none">
                             <?php
                                 foreach($checked as $b){
-                                        $printname = $b[fname]." ". $b[lname]."; ";
-                                        echo $printname;
+                                        $printname = $b['fname']." ". $b['lname']."; ";
+                                        echo h($printname);
                                         }
                                 if ($a == 0 && $n > 0){
                                     echo "Open your bible and become the first!";
@@ -235,20 +291,38 @@ mysqli_close($connection);
                             if ($bl == 1){
                                 echo "You have completed today's devotion!";
                             }else{
+<<<<<<< ours
                     ?>
                     <form method="post" action="<?php echo "checkin.php?page=".$dif_date."&planid=".$s_plan_id."&plan=".$ongoingplan_id ?>">
                         <input type="submit" name="submit" value="Check" />
                     </form>
                     <?php }}
 
+=======
+                            ?>
+                                <form method="post" action="checkin.php"> 
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="page" value="<?php echo (int) $dif_date; ?>">
+                                <input type="hidden" name="planid" value="<?php echo (int) $s_plan_id; ?>">
+                                <input type="hidden" name="plan" value="<?php echo (int) $ongoingplan_id; ?>">
+                                <input type="submit" name="submit" value="Check"> 
+                                </form>
+                        <?php }}
+                        
+>>>>>>> theirs
                     ?>
                 </th>
             </tr>
         </table>
+<<<<<<< ours
         <p class = "w3-left w3-button w3-black w3-round w3-circle"><a href="home.php?plan=<?php echo $ongoingplan_id; ?>">中文</a></p>
+=======
+        <p class = "w3-left w3-button w3-black w3-round w3-circle""><a href = "home.php?plan=<?php echo $ongoingplan_id; ?>">中文</a></p>
+>>>>>>> theirs
         <div class = "w3-right w3-padding-16">
         <form method='post' action="" style="padding-top:6px">
-            <input type="submit" value="Logout" name="but_logout">
+            <?php echo csrf_field(); ?>
+                <input type="submit" value="Logout" name="but_logout">
         </form>
     </div>
     </div>

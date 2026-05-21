@@ -1,40 +1,70 @@
 <?php
 require('judgelogin.php');
 require('connect.php');
-$userid = $_SESSION["userid"];
-$fname = $_SESSION["fname"];
+require_once 'security.php';
 
-//get user signed up plans
-$sql = "SELECT op.id, plan.name_en as name, plan.description_en as description, op.startdate FROM ongoingplan_user AS ou, ongoingplan AS op, plan WHERE ou.user_id = $userid AND ou.ongoingplan_id = op.id AND op.plan_id = plan.id";
-$resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-$n_signup = mysqli_affected_rows($connection);
+$userid = (int) $_SESSION['userid'];
+$fname = $_SESSION['fname'];
+
+// Get user signed-up plans.
 $signedUp = array();
-$signedup_id = array();
-while ($r = mysqli_fetch_assoc($resultset)){
+$signedupPlanIds = array();
+
+$signedSql = "
+    SELECT op.id, plan.name_en AS name, plan.description_en AS description, op.startdate
+    FROM ongoingplan_user AS ou
+    INNER JOIN ongoingplan AS op ON ou.ongoingplan_id = op.id
+    INNER JOIN plan ON op.plan_id = plan.id
+    WHERE ou.user_id = ?
+";
+$signedStmt = mysqli_prepare($connection, $signedSql);
+mysqli_stmt_bind_param($signedStmt, "i", $userid);
+mysqli_stmt_execute($signedStmt);
+$signedResult = mysqli_stmt_get_result($signedStmt);
+while ($r = mysqli_fetch_assoc($signedResult)) {
     $signedUp[] = $r;
+<<<<<<< ours
     $signedup_id[] = $r['id'];
 }
-
-
-//get other plans
-if ($n_signup > 0){
-    $signedup_plan = join(",", $signedup_id);
-    $other = array();
-    $sql = "SELECT op.id, plan.name, plan.description, op.startdate FROM ongoingplan AS op, plan WHERE op.plan_id = plan.id AND op.plan_id NOT IN ($signedup_plan)";
-    $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-    while ($r = mysqli_fetch_assoc($resultset)){
-        $other[] = $r;
-    }
-}else{
-    $other = array();
-    $sql = "SELECT op.id, plan.name, plan.description, op.startdate FROM ongoingplan AS op, plan WHERE op.plan_id = plan.id";
-    $resultset = mysqli_query($connection, $sql) or die(mysqli_error());
-    while ($r = mysqli_fetch_assoc($resultset)){
-        $other[] = $r;
-    }
+=======
+    $signedupPlanIds[] = (int) $r['id'];
 }
+mysqli_stmt_close($signedStmt);
+$n_signup = count($signedUp);
+>>>>>>> theirs
+
+// Get other plans.
+$other = array();
+if ($n_signup > 0) {
+    $placeholders = implode(',', array_fill(0, count($signedupPlanIds), '?'));
+    $otherSql = "
+        SELECT op.id, plan.name_en AS name, plan.description_en AS description, op.startdate
+        FROM ongoingplan AS op
+        INNER JOIN plan ON op.plan_id = plan.id
+        WHERE op.id NOT IN ($placeholders)
+    ";
+    $otherStmt = mysqli_prepare($connection, $otherSql);
+    $types = str_repeat('i', count($signedupPlanIds));
+    mysqli_stmt_bind_param($otherStmt, $types, ...$signedupPlanIds);
+    mysqli_stmt_execute($otherStmt);
+    $otherResult = mysqli_stmt_get_result($otherStmt);
+} else {
+    $otherSql = "
+        SELECT op.id, plan.name_en AS name, plan.description_en AS description, op.startdate
+        FROM ongoingplan AS op
+        INNER JOIN plan ON op.plan_id = plan.id
+    ";
+    $otherStmt = mysqli_prepare($connection, $otherSql);
+    mysqli_stmt_execute($otherStmt);
+    $otherResult = mysqli_stmt_get_result($otherStmt);
+}
+
+while ($r = mysqli_fetch_assoc($otherResult)) {
+    $other[] = $r;
+}
+mysqli_stmt_close($otherStmt);
 $n_other = count($other);
-// Close connection
+
 mysqli_close($connection);
 ?>
 <html>
@@ -47,7 +77,12 @@ mysqli_close($connection);
     <div class="w3-container">
         <table class="w3-table w3-border w3-striped">
             <tr class = "w3-cell-row">
+<<<<<<< ours
                 <th class = "w3-cell"><p>Hi <?php echo $fname;?>,<br></th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page.php">中文版</a></th>
+=======
+                <th class = "w3-cell"><p><?php echo h($fname); ?>,</th><th><a class = "w3-btn w3-black w3-round w3-padding-small w3-right" href = "plan_page.php">中文版</a></th>
+            </tr>
+>>>>>>> theirs
             <tr>
                 <th><p>My plans</p></th>
             </tr>
@@ -55,14 +90,24 @@ mysqli_close($connection);
                 <td>
                     <?php
                         $i = 1;
-                        if ($n_signup > 0){
+                        if ($n_signup > 0) {
                             echo '<ul class="w3-ul w3-card-4 w3-hoverable" style="width:100%" >';
+<<<<<<< ours
                             foreach ($signedUp as $sp){
                                 echo '<li>'.$i.'. '.'<a href = "home_en.php?plan='.$sp['id'].'">'.$sp['name'].'(Click to Enter)</a><br>&nbsp;&nbsp;&nbsp;Started on&nbsp;'.$sp['startdate'].' <br>&nbsp;&nbsp;&nbsp;<a href = "plan_detail.php?name='.$sp['name'].'&plan='.$sp['description'].'">Plan Description</a></li>';
                                 $i = $i + 1;
+=======
+                            foreach ($signedUp as $sp) {
+                                $id = (int) $sp['id'];
+                                $name = h($sp['name']);
+                                $description = h($sp['description']);
+                                $startdate = h($sp['startdate']);
+                                echo '<li>'.$i.'. '.'<a href="home_en.php?plan='.$id.'">'.$name.'(Click to Enter)</a><br>&nbsp;&nbsp;&nbsp;Started on&nbsp;'.$startdate.'<br>&nbsp;&nbsp;&nbsp;<a href="plan_detail.php?name='.urlencode($name).'&plan='.urlencode($description).'">Plan Description</a></li>';
+                                $i++;
+>>>>>>> theirs
                             }
                             echo '</ul>';
-                        }else{
+                        } else {
                             echo "&nbsp;&nbsp;Sign up for one!";
                         }
                     ?>
@@ -75,14 +120,27 @@ mysqli_close($connection);
             <tr>
                 <td>
                     <ul class="w3-ul w3-card-4 w3-hoverable" style="width:100%" >
+<<<<<<< ours
                         <?php
                         $i = 1;
                         if ($n_other > 0){
                             foreach ($other as $o){
                                 echo '<li>'.$i.'. '.'<a href = "plan_detail.php?name='.$o['name'].'&plan='.$o['description'].'">'.$o['name'].'</a><br>&nbsp;&nbsp;&nbsp;于&nbsp;'.$o['startdate'].' 开始<br>&nbsp;&nbsp;&nbsp;<a href = "signup_plan.php?plan='.$o['id'].'&user='.$userid.'">Sign up</a></li>';
                                 $i = $i + 1;
+=======
+                    <?php
+                        $i = 1;
+                        if ($n_other > 0) {
+                            foreach ($other as $o) {
+                                $id = (int) $o['id'];
+                                $name = h($o['name']);
+                                $description = h($o['description']);
+                                $startdate = h($o['startdate']);
+                                echo '<li>'.$i.'. '.'<a href="plan_detail.php?name='.urlencode($name).'&plan='.urlencode($description).'">'.$name.'</a><br>&nbsp;&nbsp;&nbsp;Started on&nbsp;'.$startdate.'<br>&nbsp;&nbsp;&nbsp;<form action="signup_plan.php" method="post" style="display:inline">'.csrf_field().'<input type="hidden" name="plan" value="'.$id.'"><button type="submit" class="w3-button w3-padding-small">Sign up</button></form></li>';
+                                $i++;
+>>>>>>> theirs
                             }
-                        }else{
+                        } else {
                             echo "&nbsp;&nbsp;No more plans";
                         }
                         ?>
@@ -94,7 +152,7 @@ mysqli_close($connection);
             </tr>
             <tr>
                 <td>
-                    <p>1. Set aside half an hour in the early morning of each day, and read carefully two or three times according to the specified New Testament scriptures. <br>2. First, prepare your "spirit", calm your "heart" through prayer, remember that you are here in front of this loving Father and read His own words, so you can look to Him to teach you How to read. <br>3. After you have prepared your spirit, you can open the Bible and read the chapter that should be read slowly and carefully two or three times. It is better to read slowly rather than fast. <br>4. When reading, you can count yourself as the person who wrote the Bible, or the person being discussed. For example, you can count yourself as a listener when you praise the Lord's teachings; when you read a letter, you can count yourself as a letter writer; when you encounter a place to remember, you can count yourself as a party. In short, you must transfer yourself to the Bible, and let the Holy Spirit use the Bible to lead you to God to admire Christ and let Him enlighten you. <br>5. After reading the entire chapter two or three times, you can repeat the passage that you can touch yourself or the passage that you don’t understand and hope to understand. At this time, you can add meditation, prayer, or hymns... and turn these verses into your praise, wish, confession, or dedication to communicate with God. <br>6. If you really can’t find a scripture that can be read several times, you might as well find out the verses you recite on that day, read this verse several times and turn it into meditation and prayer You are moisturized and fed. <br>7. Leave the last five minutes of the day or find another time to think about where in your life you can use today's bible reading. <br></p>
+                    <p>1. 每日清晨劃出半小時左右，按照所指定的應讀新約經文細細誦讀二遍或三遍。<br>2. 首先要準備你的「靈」，當藉禱告安靜你的「心」，記得你是在這位慈愛的父面前來讀祂親自默示出來的話，所以你可仰望祂教導你如何來讀。<br>3. 當你準備好你的靈以後，就可以打開聖經，把該讀的那章聖經慢慢的用心讀上二、三遍，讀時宜慢不宜快。<br>4. 讀時可把自己算作寫聖經的人，或被論及者。比如在讚主教訓時就可把自己算作當時聽道者；讀書信時，可把自己算作寫信者；遇到記事的地方，可把自己當作當事人。總之，要把自己調到聖經中去，且讓聖靈藉著聖經引你到 神面前去瞻仰基督，也讓祂來光照你。<br>5. 讀過二、三遍全章後，可把比較能摸到你自己的那一段或不了解又深盼明白的那一段經文再重複的多讀幾遍。這時你可以加上默想、禱告、或詩歌，……將這幾節聖經變成你的讚美、心願、認罪或奉獻，藉此與 神交通。<br>6. 若你真找不到可多讀幾遍的經文，不妨就把該日背誦經節找出，將此經節多讀幾遍，化成默想、禱告，這也能叫你得到滋潤與餵養。<br>7. 每日留下最後五分鐘或另找時間想想生活中有什麼地方可以用到今日讀經的得著。<br></p>
                 </td>
             </tr>
         </table>

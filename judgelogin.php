@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "connect.php";
+require_once "security.php";
 // Check user login or not
 if (!isset($_SESSION['userid']) || !isset($_SESSION['username'])) {
     header('Location: login.php');
@@ -15,6 +16,7 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['username'])) {
             exit;
         }
     }
+<<<<<<< ours
 
     $sql_query = "SELECT id, username, fname FROM users WHERE id = ? LIMIT 1";
     $stmt = mysqli_prepare($connection, $sql_query);
@@ -33,21 +35,47 @@ if (!isset($_SESSION['userid']) || !isset($_SESSION['username'])) {
     $_SESSION['fname'] = $row['fname'];
 }
 function decryptCookie( $ciphertext ) {
+=======
+>>>>>>> theirs
 
-   $cipher = "aes-256-cbc";
+    $row = db_one($connection, "SELECT id, username, fname FROM users WHERE id = ? LIMIT 1", "i", $userid);
 
-   list($encrypted_data, $iv,$key) = explode('::', base64_decode($ciphertext));
-   return openssl_decrypt($encrypted_data, $cipher, $key, 0, $iv);
+    if (!$row) {
+        header('Location: login.php');
+        exit;
+    }
 
+    $_SESSION['username'] = $row['username'];
+    $_SESSION['fname'] = $row['fname'];
+}
+function decryptCookie($ciphertext) {
+    $decoded = base64_decode((string) $ciphertext, true);
+    if ($decoded === false) {
+        return false;
+    }
+
+    $parts = explode('::', $decoded);
+    if (count($parts) !== 3) {
+        return false;
+    }
+
+    list($encrypted_data, $iv, $key) = $parts;
+    return openssl_decrypt($encrypted_data, "aes-256-cbc", $key, 0, $iv);
 }
 
 // logout
 if(isset($_POST['but_logout'])){
+    verify_csrf();
     session_destroy();
 
     // Remove cookie variables
-    $days = 365;
-    setcookie ("rememberme","", time() - ($days * 24 * 60 * 60 * 1000));
+    setcookie("rememberme", "", array(
+        'expires' => time() - 3600,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    ));
 
     header('Location: login.php');
     exit;
